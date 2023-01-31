@@ -164,12 +164,13 @@ def state_to_spherical_coordinates(state):
     b = state[1][0];
     
     # The state must be normalized
-    assert(a*conjugate(a) + b*conjugate(b) == 1)
+    if a*conjugate(a) + b*conjugate(b) != 1:
+        raise Exception("State not normalized. a^*a + b^*b = " + str(a*conjugate(a) + b*conjugate(b)))
     # assert(sum(list(map(lambda c: c*conjugate(c), ketI.coefficients()))) == 1)
     
     # Remove the global phase
     a = abs(a);
-    b = b / e^(i*(arg(a)));
+    b = b / exp(i*(arg(a)));
     
     forget();
     phi, theta = var('phi, theta');
@@ -185,14 +186,14 @@ def state_to_spherical_coordinates(state):
     solved_theta = solutions_theta[0][theta];
 
     solutions_phi = solve(
-        e^(i * phi) * sin(solved_theta/2) == b,
+        exp(i * phi) * sin(solved_theta/2) == b,
         phi,
         algorithm='maxima',
         solution_dict=True
     );
     if(len(solutions_phi) < 1):
         solutions_phi = solve(
-            e^(i * phi) * sin(solved_theta/2) == b,
+            exp(i * phi) * sin(solved_theta/2) == b,
             phi,
             algorithm='sympy',
             domain='real',
