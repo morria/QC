@@ -14,10 +14,10 @@ def normalize(state):
     return state/sqrt((state.conjugate().transpose() * state)[0][0]);
 
 
-ket0 = matrix([[1], [0]]);             # |0⟩
+ket0 = matrix(SR, [[1], [0]]);         # |0⟩
 bra0 = dual(ket0);                     # ⟨0|
 
-ket1 = matrix([[0], [1]]);             # |1⟩
+ket1 = matrix(SR, [[0], [1]]);         # |1⟩
 bra1 = dual(ket1);                     # ⟨1|
 
 ketPlus = 1/sqrt(2) * (ket0 + ket1);   # |+⟩
