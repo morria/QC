@@ -32,66 +32,71 @@ braI = dual(ketI);                     # ⟨i|
 ketINeg = 1/sqrt(2) * (ket0 - i * ket1); # |-i⟩
 braINeg = dual(ketI);                    # ⟨-i|
 
+vectorStates = [ket0, ket1, ketPlus, ketMinus, ketI, ketINeg];
 
-ket00 = matrix([[1], [0], [0], [0]]);  # |00⟩
-bra00 = dual(ket00);                   # ⟨00|
+ket00 = ket0.tensor_product(ket0); # |00⟩
+ket01 = ket0.tensor_product(ket1); # |01⟩
+ket10 = ket1.tensor_product(ket0); # |10⟩
+ket11 = ket1.tensor_product(ket1); # |11⟩
 
-ket01 = matrix([[0], [1], [0], [0]]);  # |01⟩
-bra01 = dual(ket01);                   # ⟨01|
+ket000 = ket00.tensor_product(ket0); # |000⟩
+ket001 = ket00.tensor_product(ket1); # |001⟩
+ket010 = ket01.tensor_product(ket0); # |010⟩
+ket011 = ket01.tensor_product(ket1); # |011⟩
+ket100 = ket10.tensor_product(ket0); # |100⟩
+ket101 = ket10.tensor_product(ket1); # |101⟩
+ket110 = ket11.tensor_product(ket0); # |110⟩
+ket111 = ket11.tensor_product(ket1); # |111⟩
 
-ket10 = matrix([[0], [0], [1], [0]]);  # |10⟩
-bra10 = dual(ket10);                   # ⟨10|
-
-ket11 = matrix([[0], [0], [0], [1]]);  # |11⟩
-bra11 = dual(ket11);                   # ⟨11|
-
-ket101 = matrix([0, 0, 0, 0, 0, 1, 0, 0]).transpose(); # |101⟩
-bra101 = dual(ket101);                                 # ⟨101|
-
-ket110 = matrix([0, 0, 0, 0, 0, 0, 1, 0]).transpose(); # |110⟩
-bra110 = dual(ket110);                                 # ⟨110|
-
-ket111 = matrix([0, 0, 0, 0, 0, 0, 0, 1]).transpose(); # |111⟩
-bra111 = dual(ket111)                                  # ⟨111|
-
-# Unary Operators
-
-## Identity
+# Identity
 I = matrix([[1, 0], [0, 1]])
+for state in vectorStates:
+    assert(I * state == state)
 
-## Pauli X operator flips about the x-axis and represents negation.
+# Pauli X operator flips about the x-axis and represents negation.
 X = (ket0 * bra1) + ket1*bra0;
 NOT = X;
 SigmaX = X;
 σ_x = X;
+assert(X * ket0 == ket1)
+assert(X * ket1 == ket0)
 
-## Pauli Y operator (or $\sigma_y$) flips about the y-axis.
+# Pauli Y operator (or $\sigma_y$) flips about the y-axis.
 Y = matrix([[0, -i], [i, 0]]);
 SigmaY = Y;
 σ_y = Y;
+assert(Y * ket0 == i * ket1)
+assert(Y * ket1 == -i * ket0)
 
-## Pauli Z operator (or $\sigma_y$) flips the state about the z-axis.
+# Pauli Z operator (or $\sigma_y$) flips the state about the z-axis.
 Z = matrix([[1, 0], [0, -1]]);
 SigmaZ = Z;
 σ_z = Z;
+assert(Z * ket0 == ket0)
+assert(Z * ket1 == - ket1)
 
-## S operator rotates the state about the z-axis by 90°
+# S operator rotates the state about the z-axis by 90°
 S = matrix([[1, 0], [0, i]]);
+assert(S**2 == Z)
+assert(S * ket0 == ket0);
+assert(S * ket1 == i * ket1);
 
 T = matrix([[1, 0], [0, exp(i * pi / 4)]]);
 assert(S == T**2);
+assert(T * ket0 == ket0);
+assert(T * ket1 == exp(i * pi/4) * ket1);
 
-## Rotations
-def R(φ):
-    return matrix([[1, 0], [0, exp(i * φ)]])
+def R(r):
+    return matrix([[1, 0], [0, exp(i * r)]])
 
 assert(R(𝜋) == Z)
+assert(R(𝜋/2) == S)
+assert(R(𝜋/4) == T)
 
-
-## Hadamard operator
+# Hadamard operator
 H = 1/sqrt(2) * matrix([[1, 1], [1, -1]]);
 
-### The Hadamard operator puts a state into the superposition of states
+# The Hadamard operator puts a state into the superposition of states
 assert(H * ket0 == (1/sqrt(2) * (ket0 + ket1)))
 
 assert(H * X * H == Z)
@@ -101,14 +106,49 @@ assert(H * Y * H == -Y)
 assert(hermitianConjugate(H) == H)
 assert(H**2 == I)
 
-### An opertor that satisfied $U{\dagger}U = I$ is called unitary.
+# An opertor that satisfied $U{\dagger}U = I$ is called unitary.
 assert(hermitianConjugate(H) * H == I)
 
+SWAP = matrix([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]);
+assert(SWAP * ket01 == ket10)
+
+# The first quibit is the control quibit and the second is the target. If
+# control is |0⟩ then we do nothing. Otherwise we apply NOT.
+CNOT = matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]);
+assert(CNOT * ket10 == ket11)
+
+CZ = matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]]);
+
+# Both control qubits have to be |1⟩ for the target to be manipulated.
+CCNOT = matrix([[1, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0],
+                [0, 0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 1],
+                [0, 0, 0, 0, 0, 0, 1, 0],
+                ]);
+Toffoli = CCNOT;
+assert(CCNOT * ket110 == ket111);
+
+# If the control is |1⟩ we swap the remaining two.
+CSWAP = matrix([[1, 0, 0, 0, 0, 0, 0, 0],
+                [0, 1, 0, 0, 0, 0, 0, 0],
+                [0, 0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 1, 0],
+                [0, 0, 0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 1],
+               ]);
+Fredkin = CCNOT;
+assert(CSWAP * ket110 == ket101)
 
 from sage.plot.plot3d.plot3d import axes
 from sage.plot.plot3d.shapes import Text
 
-### Convert spherical coordinates to cartesian coordinates
+# Convert spherical coordinates to cartesian coordinates
 def spherical_to_cartesian_coordinates(point):
     theta = point[0];
     phi = point[1];
@@ -118,7 +158,7 @@ def spherical_to_cartesian_coordinates(point):
         cos(theta)
     );
 
-### Convert a state to spherical coordinates
+# Convert a state to spherical coordinates
 def state_to_spherical_coordinates(state):
     a = state[0][0];
     b = state[1][0];
@@ -129,7 +169,7 @@ def state_to_spherical_coordinates(state):
     
     # Remove the global phase
     a = abs(a);
-    b = b / exp(i*(arg(a)));
+    b = b / e^(i*(arg(a)));
     
     forget();
     phi, theta = var('phi, theta');
@@ -145,14 +185,14 @@ def state_to_spherical_coordinates(state):
     solved_theta = solutions_theta[0][theta];
 
     solutions_phi = solve(
-        exp(i * phi) * sin(solved_theta/2) == b,
+        e^(i * phi) * sin(solved_theta/2) == b,
         phi,
         algorithm='maxima',
         solution_dict=True
     );
     if(len(solutions_phi) < 1):
         solutions_phi = solve(
-            exp(i * phi) * sin(solved_theta/2) == b,
+            e^(i * phi) * sin(solved_theta/2) == b,
             phi,
             algorithm='sympy',
             domain='real',
@@ -164,14 +204,14 @@ def state_to_spherical_coordinates(state):
 
     return (solved_theta, solved_phi);
 
-### Convert a state to cartesian coordinates
+# Convert a state to cartesian coordinates
 def state_to_cartesian_coordinates(state):
     return spherical_to_cartesian_coordinates(
         state_to_spherical_coordinates(state)
     );
 
-### Get a vector for display on a Bloch sphere for a given state
-def bloch_vector(state, rgbcolor=(1, 0, 0)):
+# Get a vector for display on a Bloch sphere for a given state
+def bloch_vector(state, rgbcolor=(1, 0, 0), label=''):
     state_cartesian = state_to_cartesian_coordinates(state)
     state_cartesian_numeric = (
         n(state_cartesian[0]),
@@ -179,17 +219,21 @@ def bloch_vector(state, rgbcolor=(1, 0, 0)):
         n(state_cartesian[2]),
     );
     vec_state = arrow3d((0, 0, 0), state_cartesian_numeric, radius=0.01, alpha=1.0, rgbcolor=rgbcolor)
-    # label_state = Text(
-    #     state,
-    #     rgbcolor=(0, 0, 0)
-    # ).translate(
-    #     state_cartesian_numeric[0] + 0.1,
-    #     state_cartesian_numeric[1] + 0.1,
-    #     state_cartesian_numeric[2] + 0.1
-    # );
+    
+    if label != '':
+        text_label = Text(
+            label,
+            rgbcolor=(0, 0, 0)
+        ).translate(
+            state_cartesian_numeric[0] + 0.1,
+            state_cartesian_numeric[1] + 0.1,
+            state_cartesian_numeric[2] + 0.1
+        );
+        return vec_state + text_label;
+    
     return vec_state;
 
-### Get a 3d Graphic of a Bloch sphere representing the given state
+# Get a 3d Graphic of a Bloch sphere representing the given state
 def bloch(state, vector_rgbcolor=(1, 0, 0)):
     a = axes(1, radius=0.1, color='black', alpha=0.5);
 
